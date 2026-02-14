@@ -32,3 +32,4 @@
 
 ## Testing
 - [x] Backend unit tests for core procedures (37 tests passing)
+- [x] Add Vehicle button/dialog on the Vehicles page (select customer, enter vehicle details)
