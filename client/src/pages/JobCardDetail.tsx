@@ -2,55 +2,29 @@ import { trpc } from "@/lib/trpc";
 import { useLocation, useParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  FileText,
-  Wrench,
-  Package,
-  Bell,
+  ArrowLeft, Plus, Trash2, FileText, Wrench, Package, Bell,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 const statusColors: Record<string, string> = {
   open: "bg-blue-100 text-blue-700",
@@ -68,6 +42,7 @@ export default function JobCardDetailPage() {
   const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
   const [partDialogOpen, setPartDialogOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const { t } = useTranslation();
 
   const { data: job, isLoading } = trpc.jobCard.getById.useQuery({ id: jobCardId });
   const { data: customer } = trpc.customer.getById.useQuery(
@@ -85,7 +60,7 @@ export default function JobCardDetailPage() {
     onSuccess: () => {
       utils.jobCard.getById.invalidate({ id: jobCardId });
       utils.dashboard.stats.invalidate();
-      toast.success("Status updated");
+      toast.success(t("jobCards.statusUpdated"));
     },
     onError: (err) => toast.error(err.message),
   });
@@ -95,7 +70,7 @@ export default function JobCardDetailPage() {
       utils.serviceItem.list.invalidate({ jobCardId });
       utils.jobCard.getById.invalidate({ id: jobCardId });
       setServiceDialogOpen(false);
-      toast.success("Service item added");
+      toast.success(t("jobDetail.serviceAdded"));
     },
     onError: (err) => toast.error(err.message),
   });
@@ -104,7 +79,7 @@ export default function JobCardDetailPage() {
     onSuccess: () => {
       utils.serviceItem.list.invalidate({ jobCardId });
       utils.jobCard.getById.invalidate({ id: jobCardId });
-      toast.success("Service item removed");
+      toast.success(t("jobDetail.serviceRemoved"));
     },
   });
 
@@ -113,7 +88,7 @@ export default function JobCardDetailPage() {
       utils.part.list.invalidate({ jobCardId });
       utils.jobCard.getById.invalidate({ id: jobCardId });
       setPartDialogOpen(false);
-      toast.success("Part added");
+      toast.success(t("jobDetail.partAdded"));
     },
     onError: (err) => toast.error(err.message),
   });
@@ -122,13 +97,13 @@ export default function JobCardDetailPage() {
     onSuccess: () => {
       utils.part.list.invalidate({ jobCardId });
       utils.jobCard.getById.invalidate({ id: jobCardId });
-      toast.success("Part removed");
+      toast.success(t("jobDetail.partRemoved"));
     },
   });
 
   const deleteJobMutation = trpc.jobCard.delete.useMutation({
     onSuccess: () => {
-      toast.success("Job card deleted");
+      toast.success(t("jobCards.deletedSuccess"));
       setLocation("/job-cards");
     },
     onError: (err) => toast.error(err.message),
@@ -137,7 +112,7 @@ export default function JobCardDetailPage() {
   const createReminderMutation = trpc.reminder.create.useMutation({
     onSuccess: () => {
       setReminderDialogOpen(false);
-      toast.success("Reminder created");
+      toast.success(t("reminders.created"));
     },
     onError: (err) => toast.error(err.message),
   });
@@ -195,9 +170,9 @@ export default function JobCardDetailPage() {
   if (!job) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Job card not found.</p>
+        <p className="text-muted-foreground">{t("jobCards.notFound")}</p>
         <Button variant="ghost" className="mt-4" onClick={() => setLocation("/job-cards")}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Job Cards
+          <ArrowLeft className="h-4 w-4 mr-2" /> {t("jobCards.backToJobCards")}
         </Button>
       </div>
     );
@@ -213,59 +188,39 @@ export default function JobCardDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold tracking-tight">{job.jobNumber}</h1>
-            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColors[job.status]}`}>
-              {job.status}
-            </span>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColors[job.status]}`}>{job.status}</span>
           </div>
           <p className="text-muted-foreground text-sm mt-1">
-            Created {new Date(job.createdAt).toLocaleDateString()}
-            {job.completedAt && ` · Completed ${new Date(job.completedAt).toLocaleDateString()}`}
+            {t("jobCards.created", { date: new Date(job.createdAt).toLocaleDateString() })}
+            {job.completedAt && ` · ${t("jobCards.completedOn", { date: new Date(job.completedAt).toLocaleDateString() })}`}
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Select
-            value={job.status}
-            onValueChange={(v) => updateStatusMutation.mutate({ id: jobCardId, status: v as any })}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
+          <Select value={job.status} onValueChange={(v) => updateStatusMutation.mutate({ id: jobCardId, status: v as any })}>
+            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="invoiced">Invoiced</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="open">{t("jobCards.open")}</SelectItem>
+              <SelectItem value="in-progress">{t("jobCards.inProgress")}</SelectItem>
+              <SelectItem value="completed">{t("jobCards.completed")}</SelectItem>
+              <SelectItem value="invoiced">{t("jobCards.invoiced")}</SelectItem>
+              <SelectItem value="cancelled">{t("jobCards.cancelled")}</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setLocation(`/job-cards/${jobCardId}/invoice`)}
-          >
-            <FileText className="h-4 w-4 mr-1" /> Invoice
+          <Button variant="outline" size="sm" onClick={() => setLocation(`/job-cards/${jobCardId}/invoice`)}>
+            <FileText className="h-4 w-4 mr-1" /> {t("invoice.title")}
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete Job Card?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete {job.jobNumber} and all associated service items and parts.
-                </AlertDialogDescription>
+                <AlertDialogTitle>{t("jobCards.deleteJobCard")}</AlertDialogTitle>
+                <AlertDialogDescription>{t("jobCards.deleteConfirm", { jobNumber: job.jobNumber })}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => deleteJobMutation.mutate({ id: jobCardId })}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete
-                </AlertDialogAction>
+                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                <AlertDialogAction onClick={() => deleteJobMutation.mutate({ id: jobCardId })} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -277,38 +232,32 @@ export default function JobCardDetailPage() {
         <Card className="border-0 shadow-sm">
           <CardContent className="p-5 space-y-4">
             <div>
-              <p className="text-xs text-muted-foreground">Customer</p>
-              <p
-                className="text-sm font-medium text-primary cursor-pointer hover:underline"
-                onClick={() => customer && setLocation(`/customers/${customer.id}`)}
-              >
-                {customer?.name ?? "Loading..."} · {customer?.phone}
+              <p className="text-xs text-muted-foreground">{t("jobCards.customer")}</p>
+              <p className="text-sm font-medium text-primary cursor-pointer hover:underline" onClick={() => customer && setLocation(`/customers/${customer.id}`)}>
+                {customer?.name ?? t("common.loading")} · {customer?.phone}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Vehicle</p>
-              <p
-                className="text-sm font-medium text-primary cursor-pointer hover:underline"
-                onClick={() => vehicle && setLocation(`/vehicles/${vehicle.id}`)}
-              >
+              <p className="text-xs text-muted-foreground">{t("jobCards.vehicle")}</p>
+              <p className="text-sm font-medium text-primary cursor-pointer hover:underline" onClick={() => vehicle && setLocation(`/vehicles/${vehicle.id}`)}>
                 {vehicle?.registrationNumber} — {vehicle?.make} {vehicle?.model}
               </p>
             </div>
             {job.odometerReading && (
               <div>
-                <p className="text-xs text-muted-foreground">Odometer</p>
+                <p className="text-xs text-muted-foreground">{t("jobCards.odometerReading")}</p>
                 <p className="text-sm font-medium">{job.odometerReading.toLocaleString()} km</p>
               </div>
             )}
             {job.description && (
               <div>
-                <p className="text-xs text-muted-foreground">Description</p>
+                <p className="text-xs text-muted-foreground">{t("jobCards.description")}</p>
                 <p className="text-sm">{job.description}</p>
               </div>
             )}
             {job.notes && (
               <div>
-                <p className="text-xs text-muted-foreground">Notes</p>
+                <p className="text-xs text-muted-foreground">{t("jobCards.notes")}</p>
                 <p className="text-sm">{job.notes}</p>
               </div>
             )}
@@ -317,19 +266,19 @@ export default function JobCardDetailPage() {
 
         <Card className="border-0 shadow-sm">
           <CardContent className="p-5">
-            <p className="text-xs text-muted-foreground mb-3">Cost Summary</p>
+            <p className="text-xs text-muted-foreground mb-3">{t("jobDetail.costSummary")}</p>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Labor Charges</span>
+                <span className="text-muted-foreground">{t("jobDetail.laborCharges")}</span>
                 <span className="font-medium">₹{Number(job.totalLabor ?? 0).toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Parts Cost</span>
+                <span className="text-muted-foreground">{t("jobDetail.partsCost")}</span>
                 <span className="font-medium">₹{Number(job.totalParts ?? 0).toLocaleString("en-IN")}</span>
               </div>
               <Separator />
               <div className="flex justify-between text-base">
-                <span className="font-semibold">Grand Total</span>
+                <span className="font-semibold">{t("jobDetail.grandTotal")}</span>
                 <span className="font-bold text-primary">₹{Number(job.grandTotal ?? 0).toLocaleString("en-IN")}</span>
               </div>
             </div>
@@ -337,28 +286,28 @@ export default function JobCardDetailPage() {
               <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="w-full">
-                    <Bell className="h-4 w-4 mr-1" /> Set Service Reminder
+                    <Bell className="h-4 w-4 mr-1" /> {t("jobDetail.setReminder")}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create Service Reminder</DialogTitle>
+                    <DialogTitle>{t("reminders.createReminder")}</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleCreateReminder} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Reminder Type *</Label>
-                      <Input name="reminderType" required placeholder="e.g. Oil Change, General Service" />
+                      <Label>{t("reminders.reminderType")} *</Label>
+                      <Input name="reminderType" required placeholder={t("reminders.reminderTypePlaceholder")} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Due Date *</Label>
+                      <Label>{t("reminders.dueDate")} *</Label>
                       <Input name="dueDate" type="date" required />
                     </div>
                     <div className="space-y-2">
-                      <Label>Message</Label>
-                      <Input name="message" placeholder="Optional reminder message" />
+                      <Label>{t("reminders.message")}</Label>
+                      <Input name="message" placeholder={t("reminders.messagePlaceholder")} />
                     </div>
                     <Button type="submit" className="w-full" disabled={createReminderMutation.isPending}>
-                      {createReminderMutation.isPending ? "Creating..." : "Create Reminder"}
+                      {createReminderMutation.isPending ? t("common.creating") : t("reminders.createButton")}
                     </Button>
                   </form>
                 </DialogContent>
@@ -373,29 +322,27 @@ export default function JobCardDetailPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Wrench className="h-4 w-4" /> Service Items (Labor)
+              <Wrench className="h-4 w-4" /> {t("jobDetail.serviceItems")}
             </CardTitle>
             <Dialog open={serviceDialogOpen} onOpenChange={setServiceDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-1" /> Add Service
-                </Button>
+                <Button size="sm"><Plus className="h-4 w-4 mr-1" /> {t("jobDetail.addService")}</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add Service Item</DialogTitle>
+                  <DialogTitle>{t("jobDetail.addServiceItem")}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleAddService} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Description *</Label>
+                    <Label>{t("jobDetail.serviceDescription")} *</Label>
                     <Input name="description" required placeholder="e.g. Engine oil change" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Labor Charge (₹) *</Label>
+                    <Label>{t("jobDetail.laborCharge")} *</Label>
                     <Input name="laborCharge" required type="number" step="0.01" placeholder="0.00" />
                   </div>
                   <Button type="submit" className="w-full" disabled={addServiceMutation.isPending}>
-                    {addServiceMutation.isPending ? "Adding..." : "Add Service Item"}
+                    {addServiceMutation.isPending ? t("common.adding") : t("jobDetail.addServiceItem")}
                   </Button>
                 </form>
               </DialogContent>
@@ -407,8 +354,8 @@ export default function JobCardDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Charge</TableHead>
+                  <TableHead>{t("jobDetail.serviceDescription")}</TableHead>
+                  <TableHead className="text-right">{t("jobDetail.charge")}</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -416,16 +363,9 @@ export default function JobCardDetailPage() {
                 {services.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell>{s.description}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      ₹{Number(s.laborCharge).toLocaleString("en-IN")}
-                    </TableCell>
+                    <TableCell className="text-right font-medium">₹{Number(s.laborCharge).toLocaleString("en-IN")}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => deleteServiceMutation.mutate({ id: s.id, jobCardId })}
-                      >
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteServiceMutation.mutate({ id: s.id, jobCardId })}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </TableCell>
@@ -434,9 +374,7 @@ export default function JobCardDetailPage() {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              No service items added yet.
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-6">{t("jobDetail.noServices")}</p>
           )}
         </CardContent>
       </Card>
@@ -446,39 +384,37 @@ export default function JobCardDetailPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Package className="h-4 w-4" /> Parts Used
+              <Package className="h-4 w-4" /> {t("jobDetail.partsUsed")}
             </CardTitle>
             <Dialog open={partDialogOpen} onOpenChange={setPartDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-1" /> Add Part
-                </Button>
+                <Button size="sm"><Plus className="h-4 w-4 mr-1" /> {t("jobDetail.addPart")}</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add Part</DialogTitle>
+                  <DialogTitle>{t("jobDetail.addPart")}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleAddPart} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Part Name *</Label>
+                    <Label>{t("jobDetail.partName")} *</Label>
                     <Input name="name" required placeholder="e.g. Oil Filter" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Part Number</Label>
+                    <Label>{t("jobDetail.partNumber")}</Label>
                     <Input name="partNumber" placeholder="Optional" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label>Quantity *</Label>
+                      <Label>{t("jobDetail.quantity")} *</Label>
                       <Input name="quantity" type="number" required defaultValue="1" min="1" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Unit Price (₹) *</Label>
+                      <Label>{t("jobDetail.unitPrice")} *</Label>
                       <Input name="unitPrice" type="number" step="0.01" required placeholder="0.00" />
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={addPartMutation.isPending}>
-                    {addPartMutation.isPending ? "Adding..." : "Add Part"}
+                    {addPartMutation.isPending ? t("common.adding") : t("jobDetail.addPart")}
                   </Button>
                 </form>
               </DialogContent>
@@ -490,11 +426,11 @@ export default function JobCardDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Part</TableHead>
-                  <TableHead className="hidden sm:table-cell">Part #</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Unit Price</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>{t("jobDetail.part")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("jobDetail.partHash")}</TableHead>
+                  <TableHead className="text-right">{t("jobDetail.qty")}</TableHead>
+                  <TableHead className="text-right">{t("jobDetail.unitPrice")}</TableHead>
+                  <TableHead className="text-right">{t("common.total")}</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -502,23 +438,12 @@ export default function JobCardDetailPage() {
                 {partsList.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>{p.name}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground">
-                      {p.partNumber || "—"}
-                    </TableCell>
+                    <TableCell className="hidden sm:table-cell text-muted-foreground">{p.partNumber || "—"}</TableCell>
                     <TableCell className="text-right">{p.quantity}</TableCell>
-                    <TableCell className="text-right">
-                      ₹{Number(p.unitPrice).toLocaleString("en-IN")}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      ₹{Number(p.totalPrice).toLocaleString("en-IN")}
-                    </TableCell>
+                    <TableCell className="text-right">₹{Number(p.unitPrice).toLocaleString("en-IN")}</TableCell>
+                    <TableCell className="text-right font-medium">₹{Number(p.totalPrice).toLocaleString("en-IN")}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => deletePartMutation.mutate({ id: p.id, jobCardId })}
-                      >
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deletePartMutation.mutate({ id: p.id, jobCardId })}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </TableCell>
@@ -527,9 +452,7 @@ export default function JobCardDetailPage() {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              No parts added yet.
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-6">{t("jobDetail.noParts")}</p>
           )}
         </CardContent>
       </Card>

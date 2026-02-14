@@ -33,3 +33,16 @@
 ## Testing
 - [x] Backend unit tests for core procedures (37 tests passing)
 - [x] Add Vehicle button/dialog on the Vehicles page (select customer, enter vehicle details)
+
+## Language Customization
+- [x] Create i18n context and language provider
+- [x] Create translation files for English, Tamil, Hindi, Telugu, Kannada
+- [x] Add language switcher in sidebar/header
+- [x] Integrate translations into Dashboard page
+- [x] Integrate translations into Customers page
+- [x] Integrate translations into Vehicles page
+- [x] Integrate translations into Job Cards page
+- [x] Integrate translations into Reminders page
+- [x] Integrate translations into Invoice page
+- [x] Integrate translations into all dialogs and forms
+- [x] Persist language preference in localStorage

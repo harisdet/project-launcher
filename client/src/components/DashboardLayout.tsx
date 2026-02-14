@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
+import { useTranslation, languageNames, Language } from "@/contexts/LanguageContext";
 import {
   LayoutDashboard,
   LogOut,
@@ -29,20 +31,21 @@ import {
   Car,
   ClipboardList,
   Bell,
-  FileText,
   Wrench,
+  Globe,
+  Check,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Users, label: "Customers", path: "/customers" },
-  { icon: Car, label: "Vehicles", path: "/vehicles" },
-  { icon: ClipboardList, label: "Job Cards", path: "/job-cards" },
-  { icon: Bell, label: "Reminders", path: "/reminders" },
+const menuItemKeys = [
+  { icon: LayoutDashboard, labelKey: "nav.dashboard", path: "/" },
+  { icon: Users, labelKey: "nav.customers", path: "/customers" },
+  { icon: Car, labelKey: "nav.vehicles", path: "/vehicles" },
+  { icon: ClipboardList, labelKey: "nav.jobCards", path: "/job-cards" },
+  { icon: Bell, labelKey: "nav.reminders", path: "/reminders" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -60,6 +63,7 @@ export default function DashboardLayout({
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -78,10 +82,10 @@ export default function DashboardLayout({
               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Wrench className="h-6 w-6 text-primary" />
               </div>
-              <span className="text-2xl font-bold tracking-tight">Workshop Manager</span>
+              <span className="text-2xl font-bold tracking-tight">{t("app.name")}</span>
             </div>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Sign in to access your garage management dashboard, job cards, and customer records.
+              {t("auth.signInDesc")}
             </p>
           </div>
           <Button
@@ -91,7 +95,7 @@ export default function DashboardLayout({
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
-            Sign in
+            {t("auth.signIn")}
           </Button>
         </div>
       </div>
@@ -128,8 +132,15 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find((item) => item.path === location);
   const isMobile = useIsMobile();
+  const { t, language, setLanguage } = useTranslation();
+
+  const menuItems = menuItemKeys.map((item) => ({
+    ...item,
+    label: t(item.labelKey),
+  }));
+
+  const activeMenuItem = menuItems.find((item) => item.path === location);
 
   useEffect(() => {
     if (isCollapsed) {
@@ -185,7 +196,7 @@ function DashboardLayoutContent({
                 <div className="flex items-center gap-2 min-w-0">
                   <Wrench className="h-5 w-5 text-primary shrink-0" />
                   <span className="font-semibold tracking-tight truncate text-sm">
-                    Workshop Manager
+                    {t("app.name")}
                   </span>
                 </div>
               ) : null}
@@ -213,6 +224,37 @@ function DashboardLayoutContent({
                 );
               })}
             </SidebarMenu>
+
+            {/* Language Switcher */}
+            <div className="px-2 mt-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    tooltip={t("common.language")}
+                    className="h-10 transition-all font-normal w-full"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span>{languageNames[language]}</span>
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  {(Object.entries(languageNames) as [Language, string][]).map(
+                    ([code, name]) => (
+                      <DropdownMenuItem
+                        key={code}
+                        onClick={() => setLanguage(code)}
+                        className="cursor-pointer flex items-center justify-between"
+                      >
+                        <span>{name}</span>
+                        {language === code && (
+                          <Check className="h-4 w-4 text-primary" />
+                        )}
+                      </DropdownMenuItem>
+                    )
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </SidebarContent>
 
           <SidebarFooter className="p-3">
@@ -240,7 +282,7 @@ function DashboardLayoutContent({
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
+                  <span>{t("auth.signOut")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
